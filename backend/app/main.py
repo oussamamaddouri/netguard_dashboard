@@ -10,10 +10,8 @@ from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# --- START OF CACHING FIX ---
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
-# --- END OF CACHING FIX ---
 
 from app.routers import (
     auth, debug, hosts, ports, security, threat_intel,
@@ -30,19 +28,14 @@ from app.config import settings
 from app.state import app_state
 from elasticsearch import Elasticsearch
 
-# --- Configure Logging ---
 logging.basicConfig(level="INFO", format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logging.getLogger("elastic_transport").setLevel(logging.WARNING)
 logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# --- Application Lifespan ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- START OF CACHING FIX ---
-    # Initialize the cache when the application starts
     FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
-    # --- END OF CACHING FIX ---
     logger.info("========================================")
     logger.info("  CybReon Application Starting Up...   ")
     logger.info("========================================")
@@ -87,7 +80,6 @@ async def lifespan(app: FastAPI):
     if hasattr(app.state, 'packet_capture_stop_event'): app.state.packet_capture_stop_event.set()
     logger.info("✅ Shutdown complete.")
 
-# --- Background Loops (No changes here) ---
 def host_discovery_loop():
     import time; time.sleep(10)
     while True:
@@ -107,14 +99,11 @@ def vuln_scanner_loop():
         except Exception as e: logger.error(f"Vuln scanning error: {e}", exc_info=True)
         time.sleep(1800)
 
-# --- Create and Configure the App ---
 app = FastAPI(title="CybReon", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# --- Create a main API router ---
 api_router = APIRouter(prefix="/api")
 
-# Add all existing routers to the main api_router
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(hosts.router, prefix="/hosts", tags=["Hosts"])
 api_router.include_router(ports.router, prefix="/ports", tags=["Ports"])
@@ -127,7 +116,6 @@ api_router.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
 api_router.include_router(live_cockpit.router, prefix="/v1/cockpit")
 api_router.include_router(investigation.router, prefix="/investigation", tags=["Investigation"])
 
-# Define the WebSocket endpoint
 @api_router.websocket("/ws/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -137,10 +125,8 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-# Mount the main API router
 app.include_router(api_router)
 
-# --- Serve the React Frontend (Must be last) ---
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         try:
