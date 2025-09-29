@@ -58,9 +58,7 @@ class HostSchema(OrmConfig):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
-# ### --- THIS IS THE FIX --- ###
-# The PacketSchema has been updated to match the fields from Elasticsearch
-# It no longer uses OrmConfig because it's not mapping to a database model.
+
 class PacketSchema(BaseModel):
     timestamp: datetime = Field(..., alias='@timestamp')
     source_ip: str
@@ -100,7 +98,7 @@ class ProtocolDistribution(BaseModel):
         
 class ZeekConnectionSchema(BaseModel):
     timestamp: datetime = Field(..., alias='@timestamp')
-    ts: datetime # Keep this to match the frontend calculation
+    ts: datetime 
     uid: str
     source_ip: str = Field(..., alias='id_orig_h')
     source_port: int = Field(..., alias='id_orig_p')
