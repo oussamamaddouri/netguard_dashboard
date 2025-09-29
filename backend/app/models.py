@@ -5,9 +5,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Index, Text, ForeignKe
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
-# --- UNIFIED VULNERABILITY MODEL ---
-# The goal is to have a central table for the UI that aggregates findings
-# from Nmap (Scripts), Nuclei, and GVM (OpenVAS).
+
+
 
 class Vulnerability(Base):
     __tablename__ = "vulnerabilities"
@@ -19,15 +18,13 @@ class Vulnerability(Base):
     cve = Column(String(50), index=True, nullable=True)
     description = Column(Text, nullable=False)
     
-    # ### --- KEY ADDITION --- ###
-    # This column will store the source of the finding ('Nmap', 'Nuclei', 'GVM').
+
     source = Column(String(50), nullable=False, index=True)
 
     timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     host_id = Column(Integer, ForeignKey('hosts.id'), nullable=True)
     host = relationship("Host", back_populates="vulnerabilities")
 
-# --- Original & Raw Data Models (We keep these) ---
 
 class NetworkPacket(Base):
     __tablename__ = "network_packets"
