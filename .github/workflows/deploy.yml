@@ -2,7 +2,6 @@
 
 name: Deploy Project to Production
 
-# Trigger this workflow on a push to the main branch
 on:
   push:
     branches:
@@ -24,21 +23,18 @@ jobs:
       - name: 3. Add remote host to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: 4. Copy project files to server
-        # Uses scp to securely copy all files. 
-        # Ensure the target directory (e.g., /home/ubuntu/cybersecurityx/) exists on the server.
         run: |
-          scp -r $GITHUB_WORKSPACE/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/cybersecurityx/
+          scp -P ${{ secrets.REMOTE_PORT }} -r $GITHUB_WORKSPACE/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/cybersecurityx/
 
       - name: 5. Execute deployment script on server
-        # Connects via SSH and runs the script.
-        # The MASTER_PASSWORD secret is passed as an environment variable.
         run: |
-          ssh ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "
+          ssh -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "
           cd /home/${{ secrets.REMOTE_USER }}/cybersecurityx/ && \
           export MASTER_PASSWORD='${{ secrets.MASTER_PASSWORD }}' && \
           sudo bash execute.sh
           "
+```    **Note the subtle but critical difference**: `scp` uses an uppercase `-P` for the port, while `ssh` and `ssh-keyscan` use a lowercase `-p`.
