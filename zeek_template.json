@@ -1,0 +1,20 @@
+{
+  "index_patterns": ["netguard-zeek-*", "zeek-logs-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "id_orig_h": { "type": "ip" },
+        "id_orig_p": { "type": "long" },
+        "id_resp_h": { "type": "ip" },
+        "id_resp_p": { "type": "long" },
+        "proto": { "type": "keyword" },
+        "conn_state": { "type": "keyword" },
+        "service": { "type": "keyword" }
+      }
+    }
+  }
+}

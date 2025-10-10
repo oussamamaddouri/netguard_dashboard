@@ -1,0 +1,121 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 90%;
+  }
+  :root {
+    --color-background: 0 0% 96%;
+    --color-surface: 0 0% 100%;
+    --color-accent: 231 70% 63%;
+    --color-accent-secondary: 231 70% 50%;
+    --color-accent-muted: 0 0% 90%;
+    --color-text-primary: 224 76% 12%;
+    --color-text-secondary: 220 13% 44%;
+    --color-border: 220 14% 90%;
+  }
+
+  .dark {
+    --color-background: 230 15% 8%;       /* #141217 */
+    --color-surface: 225 17% 13%;         /* #1A1C28 - THIS IS THE FIX */
+    --color-accent: 28 100% 47%;
+    --color-accent-secondary: 18 100% 49%;
+    --color-accent-muted: 28 100% 15%;
+    --color-text-primary: 268 71% 96%;
+    --color-text-secondary: 267 19% 70%;
+    --color-border: 225 17% 20%;          /* A border matching the new card color */
+  }
+
+  .custom {
+    --color-background: 0 0% 3%;          /* Your custom background color */
+    --color-surface: 0 0% 9%;             /* #0F0F0F - THIS IS THE UPDATED LINE */
+    --color-accent: 221 83% 53%;
+    --color-accent-secondary: 221 83% 45%;
+    --color-accent-muted: 221 83% 15%;
+    --color-text-primary: 0 0% 100%;
+    --color-text-secondary: 0 0% 100%;
+    --color-border: 0 0% 15%;
+  }
+  
+  /*
+  ===================================================================
+   BODY STYLING (RESTORED FROM YOUR WORKING ORIGINAL CONFIG)
+  ===================================================================
+  */
+  body {
+    @apply bg-light-bg text-light-text;
+    min-height: 100vh;
+    transition: background-color 0.3s ease-in-out;
+  }
+
+  .dark body {
+  /* UPDATED with your new background color and no gradient */
+    background-color: #141217;
+    background-image: none;
+    @apply text-dark-text;
+  }
+  
+  .custom body {
+    background-color: hsl(var(--color-background));
+    background-image: none; /* remove gradient for custom theme */
+    @apply text-text-primary;
+  }
+}
+
+/* --- Recharts Styles --- */
+@layer components {
+    .recharts-responsive-container,
+    .recharts-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+    }
+    .recharts-surface {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* --- Corrected Scrollbar and Animation Styles --- */
+
+/* Base and Dark Theme Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { @apply bg-light-card dark:bg-dark-card; }
+::-webkit-scrollbar-thumb { @apply rounded-full bg-gray-400 dark:bg-accent-primary; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-500 dark:bg-accent-secondary; }
+
+/* Custom Theme Scrollbar Override */
+.custom ::-webkit-scrollbar-track { @apply bg-surface; }
+.custom ::-webkit-scrollbar-thumb { @apply bg-accent; }
+.custom ::-webkit-scrollbar-thumb:hover { @apply bg-accent-secondary; }
+
+/* Keyframes and Animations (using old config's values) */
+@keyframes kenburns-effect { from { transform: scale(1.1) translate(0, 0); opacity: 0.8; } to { transform: scale(1.2) translate(-2%, -2%); opacity: 1; } }
+.kenburns-background { animation: kenburns-effect 30s ease-in-out infinite alternate; }
+
+@keyframes logo-pulse {
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 0.75rem theme('colors.accent-primary')); }
+}
+.custom .logo-animation { /* Assuming you apply a class for this */
+  animation-name: logo-pulse-custom;
+}
+@keyframes logo-pulse-custom { /* Separate animation for custom theme */
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 0.75rem hsl(var(--color-accent))); }
+}
+
+@layer utilities {
+    .text-shadow-accent {
+      text-shadow: 0 0 15px theme('colors.accent-primary' / 50%);
+    }
+    .custom .text-shadow-accent {
+      text-shadow: 0 0 15px hsl(var(--color-accent) / 50%);
+    }
+}
+
+/* --- Unchanged animations from original file --- */
+@keyframes ripple-effect{from{transform:scale(.5);opacity:.6}to{transform:scale(2.5);opacity:0}}@keyframes orbit-1{to{transform:rotate(360deg)}}@keyframes orbit-2{to{transform:rotate(-360deg)}}@keyframes text-reveal{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}.animate-text-reveal span{animation:text-reveal .8s cubic-bezier(.22,1,.36,1) forwards;display:inline-block;opacity:0}@keyframes fade-in-subtle{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.animate-fade-in-subtle{animation:fade-in-subtle 1s ease-out forwards}@keyframes orbit-reverse-1{from{transform:rotate(360deg)}to{transform:rotate(0deg)}}@keyframes orbit-reverse-2{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.animate-orbit-reverse-1{animation:orbit-reverse-1 40s linear infinite}.animate-orbit-reverse-2{animation:orbit-reverse-2 30s linear infinite}

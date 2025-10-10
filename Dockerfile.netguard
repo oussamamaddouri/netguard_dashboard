@@ -1,0 +1,73 @@
+# --- Stage 1: Build the React Frontend ---
+# This stage now assumes you have run "npm install" on the host.
+# It copies the pre-built dependencies, removing network as a failure point.
+FROM node:18.19.1-bullseye AS builder
+
+WORKDIR /app
+
+# Copy the dependency manifests
+COPY package.json ./
+COPY yarn.lock ./
+
+# Copy the pre-installed node_modules from the host machine.
+# This makes the build faster and immune to network issues.
+COPY ./node_modules ./node_modules
+
+# Now that dependencies are "installed", copy the source code
+COPY ./src ./src
+COPY ./public ./public
+COPY ./tailwind.config.js ./
+COPY ./postcss.config.js ./
+
+# --- THE FIX: Call react-scripts by its full path ---
+# Instead of using the "npm run build" shortcut, we call the script directly.
+# This bypasses any PATH issues inside the container's shell.
+RUN ./node_modules/.bin/react-scripts build
+
+
+
+# --- Stage 2: Build the Final Python Production Image ---
+# (This part is already correct and remains unchanged)
+FROM python:3.12-slim
+WORKDIR /app
+
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tshark \
+        nmap \
+        netcat-openbsd \
+        docker.io \
+        docker-cli \
+        gosu \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+COPY ./backend/requirements.txt .
+RUN python -m pip install --upgrade pip && \
+    pip install \
+      --no-cache-dir \
+      -r requirements.txt && \
+    pip install --no-cache-dir "uvicorn[standard]"
+
+RUN groupadd -r netguard && useradd --no-log-init -r -g netguard netguard
+
+
+
+COPY ./backend /app
+COPY --from=builder /app/build ./build
+
+
+
+COPY netguard-entrypoint.sh /usr/local/bin/netguard-entrypoint.sh
+RUN chmod +x /usr/local/bin/netguard-entrypoint.sh
+
+RUN chown -R netguard:netguard /app
+
+# --- REMOVED THE "USER netguard" LINE ---
+# The entrypoint script will now handle changing the user.
+
+# --- NEW: Set the entrypoint and default command ---
+ENTRYPOINT ["netguard-entrypoint.sh"]
+CMD ["sh", "-c", "python -m app.create_db && uvicorn app.main:app --host 0.0.0.0 --port 8080 --log-level info"]

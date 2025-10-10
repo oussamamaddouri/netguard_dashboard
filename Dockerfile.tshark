@@ -1,0 +1,4 @@
+FROM alpine:3.18
+
+# Install tshark and then clear the package manager's cache to prevent I/O conflicts
+RUN apk update && apk add --no-cache tshark && rm -rf /var/cache/apk/*

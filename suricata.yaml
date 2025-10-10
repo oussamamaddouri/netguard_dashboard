@@ -1,0 +1,49 @@
+%YAML 1.1
+---
+# Suricata configuration file
+
+# Set the default log directory
+default-log-dir: /var/log/suricata
+
+# AF_PACKET configuration for high-speed capture
+af-packet:
+  - interface: ens33
+    cluster-id: 99
+    defrag: yes
+    use-mmap: yes
+
+outputs:
+  # This enables the EVE JSON log for Filebeat to read.
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - flow
+        - dns
+        - http
+        - files
+        - tls
+
+  # This enables PCAP logging with UNIQUE filenames for Zeek to process.
+  - pcap-log:
+      enabled: yes
+      filename: log.pcap
+      limit: 4mb
+      max-files: 200
+      interval: 60s
+# Basic logging
+logging:
+  default-output:
+    file:
+      enabled: yes
+      filename: suricata.log
+      level: info
+
+# Set the runmode to 'workers'
+runmode: workers
+
+# Define default rule paths, even if no rules are loaded.
+default-rule-path: /etc/suricata/rules
+rule-files: []

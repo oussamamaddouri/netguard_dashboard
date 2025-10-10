@@ -1,0 +1,28 @@
+# ~/Netguard/mightworking/nginx/nginx.conf
+
+# This sets the user and number of worker processes for Nginx
+user  nginx;
+worker_processes  auto;
+
+# Standard error log and process ID file locations
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    # Basic performance settings
+    sendfile        on;
+    tcp_nopush      on;
+    tcp_nodelay     on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Include our server-specific configuration files
+    include /etc/nginx/conf.d/*.conf;
+}

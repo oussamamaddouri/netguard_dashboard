@@ -1,0 +1,5 @@
+python-nmap
+SQLAlchemy==2.0.17
+pg8000
+psycopg2-binary
+python-dotenv

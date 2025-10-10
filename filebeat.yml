@@ -1,0 +1,69 @@
+# ============================== Filebeat inputs ===============================
+filebeat.inputs:
+
+- type: filestream
+  id: zeek-logs
+  enabled: true
+  paths:
+    - /opt/zeek/logs/**/*.log
+  fields:
+    log_source: zeek
+  fields_under_root: true
+  # NOTE: The broken 'parsers:' block is removed from here.
+  processors:
+    # THIS IS THE CRITICAL FIX: It finds the 'message' field and decodes it as JSON.
+    - decode_json_fields:
+        fields: ["message"]
+        target: "" # This places the decoded fields (like 'ts', 'id') at the top level.
+        overwrite_keys: true
+
+    - rename:
+        fields:
+          - from: "service"
+            to: "zeek.service"
+        ignore_missing: true
+        fail_on_error: false
+    - timestamp:
+        field: ts
+        layouts:
+          - '2006-01-02T15:04:05.999999Z'
+        test:
+          - '2025-09-11T12:37:08.479103Z'
+
+- type: filestream
+  id: suricata-logs
+  enabled: true
+  paths:
+    - /pcaps/eve.json
+  fields:
+    log_source: suricata
+  fields_under_root: true
+  # The ndjson parser works fine for Suricata, so we keep it.
+  parsers:
+    - ndjson:
+        keys_under_root: true
+        add_error_key: true
+        ignore_decoding_error: true
+
+# ================================= Outputs ====================================
+setup.template.enabled: false
+setup.ilm.enabled: false
+
+output.elasticsearch:
+  hosts: ["https://elasticsearch:9200"] 
+  username: "elastic"
+  password: "${ELASTIC_PASSWORD}"
+  ssl:
+    enabled: true
+    certificate_authorities: ["/usr/share/filebeat/config/certs/ca/ca.crt"]
+  indices:
+    - index: 'suricata-logs'
+      when.equals:
+        log_source: 'suricata'
+    - index: 'zeek-logs'
+      when.equals:
+        log_source: 'zeek'
+
+# ================================= Processors =================================
+processors:
+  - add_host_metadata: ~

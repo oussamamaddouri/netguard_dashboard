@@ -1,0 +1,18 @@
+# Dockerfile.elastic-setup
+FROM alpine:latest
+
+# Install curl and su-exec
+RUN apk add --no-cache curl su-exec
+
+# Copy the entrypoint and setup scripts into the image
+COPY ./elastic-setup-entrypoint.sh /entrypoint.sh
+COPY ./setup-elastic.sh /usr/local/bin/setup-elastic.sh
+
+# Make the scripts executable
+RUN chmod +x /entrypoint.sh /usr/local/bin/setup-elastic.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Set the default command
+CMD ["/usr/local/bin/setup-elastic.sh"]

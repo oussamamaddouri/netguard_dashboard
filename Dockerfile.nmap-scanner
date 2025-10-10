@@ -1,0 +1,29 @@
+# Use a slim Python base image for a smaller footprint
+FROM python:3.12-slim
+
+# Set the working directory inside the container
+WORKDIR /usr/src/app
+
+# Install system dependencies required for scanning
+# Nmap is essential. procps is useful for debugging (ps aux).
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nmap procps && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy your application backend code into the container.
+# This makes the 'app' directory (with models/database) available for import.
+
+
+COPY ./backend /usr/src/app/backend
+
+# Copy and install the Python dependencies specific to this scanner service
+COPY ./backend/scanner/requirements.txt /usr/src/app/backend/scanner/requirements.txt
+RUN pip install --no-cache-dir -r /usr/src/app/backend/scanner/requirements.txt
+
+
+
+
+
+# Command to run the scanner script.
+# -u ensures that the output is sent straight to logs without being buffered.
+CMD ["python", "-u", "backend/scanner/scanner.py"]

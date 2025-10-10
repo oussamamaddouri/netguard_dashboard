@@ -1,0 +1,40 @@
+
+schedule # <-- ADDED for the security monitor scheduler
+
+# Core web framework
+fastapi==0.111.0
+uvicorn==0.29.0
+fastapi-cache2[inmemory]
+# Database
+sqlalchemy==2.0.29
+pg8000
+elasticsearch==8.13.0
+# Security and Auth
+python-jose[cryptography]==3.4.0
+passlib[bcrypt]==1.7.4
+
+
+# Network and System tools
+python-nmap==0.7.1
+scapy==2.5.0
+geoip2
+python-magic
+psutil==5.9.8 # <-- Version number removed for better compatibility
+watchdog
+
+# Other Dependencies
+# Note: Removed specific versions for common libraries to avoid dependency conflicts.
+# pip will resolve the best compatible versions.
+anyio
+click
+greenlet
+h11
+idna
+Jinja2
+MarkupSafe
+pydantic
+PyMySQL
+python-dotenv
+sniffio
+starlette
+typing_extensions

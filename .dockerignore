@@ -1,0 +1,7 @@
+# Do not ignore the node_modules directory
+# This allows us to COPY it into the build stage
+
+# Standard files to ignore
+.git
+.env
+build
