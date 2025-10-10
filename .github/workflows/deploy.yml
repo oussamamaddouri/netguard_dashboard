@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml
+# .github/workflows/deploy.yml (Simplified for Self-Hosted Runner)
 
 name: Deploy Project to Production
 
@@ -9,32 +9,18 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # This is the magic line. It tells GitHub to run this job on your VM.
+    runs-on: self-hosted
     
     steps:
       - name: 1. Checkout Repository
+        # The runner will check out a copy of the code into its working directory.
         uses: actions/checkout@v4
 
-      - name: 2. Set up SSH connection
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: 3. Add remote host to known_hosts
+      - name: 2. Execute deployment script locally
+        # The runner is already on the correct machine, so we just run the script.
+        # We still pass the MASTER_PASSWORD as a secret.
+        env:
+          MASTER_PASSWORD: ${{ secrets.MASTER_PASSWORD }}
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_HOST }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-      - name: 4. Copy project files to server
-        run: |
-          scp -P ${{ secrets.REMOTE_PORT }} -r $GITHUB_WORKSPACE/* ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/cybersecurityx/
-
-      - name: 5. Execute deployment script on server
-        run: |
-          ssh -p ${{ secrets.REMOTE_PORT }} ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} "
-          cd /home/${{ secrets.REMOTE_USER }}/cybersecurityx/ && \
-          export MASTER_PASSWORD='${{ secrets.MASTER_PASSWORD }}' && \
-          sudo bash execute.sh
-          "
-```    **Note the subtle but critical difference**: `scp` uses an uppercase `-P` for the port, while `ssh` and `ssh-keyscan` use a lowercase `-p`.
+          sudo bash ./execute.sh
