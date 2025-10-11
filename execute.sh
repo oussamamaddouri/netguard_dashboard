@@ -67,53 +67,7 @@ echo ""
 
 
 # --- Stage 1.5: Pre-flight System Check & Automatic Installation ---
-echo "--- Stage 1.5: Checking for required tools ---"
 
-# This variable will hold our docker command. It may be 'docker' or 'sudo docker'.
-DOCKER_CMD=""
-COMPOSE_CMD=""
-
-# The most reliable check is to see if we can actually connect to the docker daemon.
-if docker ps &> /dev/null; then
-    echo "INFO: Docker is installed and permissions are correct."
-    DOCKER_CMD="docker"
-    COMPOSE_CMD="docker compose"
-else
-    echo "WARNING: Docker is not installed or the current user lacks permissions."    
-    # Prompt for sudo password once at the beginning of the install process.
-    sudo -v
-    
-    # Run the installation using the stored sudo credentials.
-    sudo apt-get update -y > /dev/null
-    sudo apt-get install -y ca-certificates curl > /dev/null
-    sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
-    
-    # <<< THE FIX IS HERE: Ensure the sources directory exists before writing to it >>>
-    sudo mkdir -p /etc/apt/sources.list.d
-
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-      
-    sudo apt-get update -y > /dev/null
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    
-    # Add the current user to the docker group for FUTURE convenience (after next login).
-    sudo usermod -aG docker $USER
-    
-    # For THIS script run, we must use sudo to run docker.
-    DOCKER_CMD="sudo docker"
-    COMPOSE_CMD="sudo docker compose"
-    
-    echo "✅ Docker installed successfully."
-    echo "INFO: The script will use 'sudo' for all Docker commands for this session."
-    echo "NOTE: For future runs, you have been added to the 'docker' group. Please log out and log back in after the script finishes."
-fi
-
-echo "INFO: Using '$COMPOSE_CMD' for Docker operations."
 
 # Check for other required tools (installation requires sudo)
 if ! command -v "python3" &> /dev/null || ! command -v "npm" &> /dev/null || ! command -v "ip" &> /dev/null || ! command -v "openssl" &> /dev/null; then
@@ -309,12 +263,12 @@ echo "INFO: Removing obsolete 'version' tag from docker-compose.yml to prevent w
 sed -i '/^version:/d' docker-compose.yml
 
 echo "INFO: Tearing down any previous Docker instances to ensure a clean start..."
-if ! $COMPOSE_CMD --env-file .env down -v --remove-orphans; then
-    echo "Notice: '$COMPOSE_CMD down' reported an error. This is normal on the first run."
+if ! docker compose --env-file .env down -v --remove-orphans; then
+    echo "Notice: 'docker compose down' reported an error. This is normal on the first run."
 fi
 
 echo "INFO: Performing a deep clean of Docker resources (unused volumes, images, cache)..."
-$DOCKER_CMD system prune -af --volumes
+docker system prune -af --volumes
 echo "INFO: Docker system is clean."
 
 
@@ -324,10 +278,10 @@ echo "--- Stage 5: Starting services in sequence to ensure stability ---"
 export COMPOSE_HTTP_TIMEOUT=180
 
 echo "INFO: Starting database and Elasticsearch services..."
-$COMPOSE_CMD --env-file .env up -d db elasticsearch
+docker compose --env-file .env up -d db elasticsearch
 
 echo "INFO: Waiting for dependencies to initialize (this may take up to a minute)..."
-while [ -z "$($COMPOSE_CMD ps -a | grep 'postgres_db' | grep '(healthy)')" ] || [ -z "$($COMPOSE_CMD ps -a | grep 'elasticsearch' | grep '(healthy)')" ]; do
+while [ -z "$(docker compose ps -a | grep 'postgres_db' | grep '(healthy)')" ] || [ -z "$(docker compose ps -a | grep 'elasticsearch' | grep '(healthy)')" ]; do
     printf "."
     sleep 5
 done
@@ -336,11 +290,11 @@ echo "✅ SUCCESS: Database and Elasticsearch are healthy."
 
 
 echo "INFO: Force-rebuilding custom services to bypass cache..."
-$COMPOSE_CMD --env-file .env build --no-cache elastic-setup zeek netguard_app packet-streamer nmap-scanner
+docker compose --env-file .env build --no-cache elastic-setup zeek netguard_app packet-streamer nmap-scanner
 
 
 echo "INFO: Starting all remaining application services..."
-if ! $COMPOSE_CMD --env-file .env up -d --no-build; then
+if ! docker compose --env-file .env up -d --no-build; then
     echo "ERROR: Docker Compose failed to start the main application stack. Please check the logs."
     exit 1
 fi
@@ -351,7 +305,7 @@ echo "INFO: The following script will ask for your domain name, email,"
 echo "      and will require sudo privileges to set up a trusted SSL certificate."
 sudo ./ssl.sh
 echo "INFO: SSL certificate configured. Restarting Nginx to apply changes..."
-$COMPOSE_CMD --env-file .env restart nginx
+docker compose --env-file .env restart nginx
 echo "✅ Frontend secured successfully."
 echo ""
 
