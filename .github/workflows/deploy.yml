@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 2. Execute deployment script locally
+        working-directory: ${{ github.workspace }}
         # The runner is already on the correct machine, so we just run the script.
         # We still pass the MASTER_PASSWORD as a secret.
         env:
