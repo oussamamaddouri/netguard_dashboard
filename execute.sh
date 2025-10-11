@@ -360,11 +360,12 @@ echo "✅ Frontend secured successfully."
 echo ""
 
 
+
 echo "--- Final Step: Resetting file permissions for the runner ---"
-# The $SUDO_USER variable holds the name of the user who called sudo (e.g., 'cybersecurityx')
-# We recursively change the ownership of the entire directory back to that user.
-chown -R $SUDO_USER:$SUDO_USER .
-echo "✅ Permissions reset."
+# This is more reliable than $SUDO_USER. It sets ownership
+# to 'cybersecurityx' which is the user running the agent.
+chown -R cybersecurityx:cybersecurityx .
+echo "✅ Permissions have been reset to the 'cybersecurityx' user."
 echo ""
 
 
