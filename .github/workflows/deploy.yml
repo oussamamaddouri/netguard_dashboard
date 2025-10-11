@@ -1,4 +1,4 @@
-# .github/workflows/deploy.yml (Simplified for Self-Hosted Runner)
+# .github/workflows/deploy.yml (The Definitive Fix)
 
 name: Deploy Project to Production
 
@@ -9,19 +9,26 @@ on:
 
 jobs:
   deploy:
-    # This is the magic line. It tells GitHub to run this job on your VM.
     runs-on: self-hosted
     
     steps:
       - name: 1. Checkout Repository
-        # The runner will check out a copy of the code into its working directory.
         uses: actions/checkout@v4
 
-      - name: 2. Execute deployment script locally
+      - name: 2. Execute deployment script
         working-directory: ${{ github.workspace }}
-        # The runner is already on the correct machine, so we just run the script.
-        # We still pass the MASTER_PASSWORD as a secret.
         env:
           MASTER_PASSWORD: ${{ secrets.MASTER_PASSWORD }}
         run: |
-          sudo bash ./execute.sh
+          bash ./execute.sh
+
+      # --- THE GUARANTEED CLEANUP FIX ---
+      - name: 3. Force Workspace Cleanup
+        # This step runs whether Step 2 succeeded or failed.
+        if: always()
+        # It runs in the same directory as the script.
+        working-directory: ${{ github.workspace }}
+        # It uses sudo to forcefully remove all files, regardless of who owns them.
+        run: |
+          echo "Forcibly cleaning up workspace..."
+          sudo rm -rf .
