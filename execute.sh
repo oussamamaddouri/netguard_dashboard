@@ -133,9 +133,13 @@ echo ""
 
 # --- Stage 2: Setting up Python Host Environment ---
 # (This section remains unchanged)
+
+
 echo "--- Stage 2: Setting up Python virtual environment for host-side scripts ---"
 REQUIREMENTS_FILE="backend/requirements.txt"
 VENV_DIR="backend/venv"
+
+echo "--- DEBUG: About to create venv. Running as user: $(whoami) ---"
 
 if [ -f "$REQUIREMENTS_FILE" ]; then
     if [ ! -d "$VENV_DIR" ]; then
@@ -144,6 +148,14 @@ if [ -f "$REQUIREMENTS_FILE" ]; then
     else
         echo "INFO: Python virtual environment already exists."
     fi
+
+    # --- THE BULLETPROOF FIX ---
+    # Forcefully change the ownership of the new directory back to the runner user.
+    # This corrects any permissions that were wrongly set by sudo or other configs.
+    echo "--- FIX: Forcibly setting ownership of the venv directory ---"
+    sudo chown -R cybersecurityx:cybersecurityx "$VENV_DIR"
+    echo "--- DEBUG: Ownership of VENV_DIR is now: ---"
+    ls -ld "$VENV_DIR" # This command prints the ownership to the log
 
     echo "INFO: Installing/updating Python dependencies from '$REQUIREMENTS_FILE'..."
     (
@@ -157,7 +169,6 @@ else
     echo "WARNING: Could not find '$REQUIREMENTS_FILE'. Skipping Python venv setup."
 fi
 echo ""
-
 
 
 
