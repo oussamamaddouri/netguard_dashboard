@@ -133,6 +133,30 @@ echo ""
 
 # --- Stage 2: Setting up Python Host Environment ---
 # (This section remains unchanged)
+echo "--- Stage 2: Setting up Python virtual environment for host-side scripts ---"
+REQUIREMENTS_FILE="backend/requirements.txt"
+VENV_DIR="backend/venv"
+
+if [ -f "$REQUIREMENTS_FILE" ]; then
+    if [ ! -d "$VENV_DIR" ]; then
+        echo "INFO: Creating Python virtual environment in '$VENV_DIR'..."
+        python3 -m venv "$VENV_DIR"
+    else
+        echo "INFO: Python virtual environment already exists."
+    fi
+
+    echo "INFO: Installing/updating Python dependencies from '$REQUIREMENTS_FILE'..."
+    (
+        source "${VENV_DIR}/bin/activate"
+        python3 -m pip install --upgrade pip > /dev/null
+        python3 -m pip install -r "$REQUIREMENTS_FILE"
+    )
+    echo "✅ Host Python environment is ready."
+    echo "   To use it manually: source ${VENV_DIR}/bin/activate"
+else
+    echo "WARNING: Could not find '$REQUIREMENTS_FILE'. Skipping Python venv setup."
+fi
+echo ""
 
 
 
