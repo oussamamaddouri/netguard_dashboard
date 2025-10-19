@@ -17,7 +17,6 @@ update_env_var() {
 }
 
 # --- Stage 1: Ensuring All Scripts Are Executable ---
-# (This section remains unchanged)
 echo "--- Stage 1: Making all shell scripts in the project executable ---"
 find . -type f -name "*.sh" -print0 | xargs -0 chmod +x
 echo "✅ All .sh scripts are now executable."
@@ -51,13 +50,11 @@ fi
 
 # Final check: Display the welcome screen based on what's available
 if command -v figlet &> /dev/null && command -v toilet &> /dev/null; then
-    # This will now run if the tools were already there OR if our install just succeeded
     figlet -c "Welcome"
     figlet -c "To"
     toilet -f big -F gay "CybersecurityX"
     echo ">>> Disrupt. Expose. Prevail. <<<"
 else
-    # This only runs as a fallback if the installation failed
     echo "##################################################"
     echo "### Welcome to the CybersecurityX Setup Script ###"
     echo "##################################################"
@@ -72,7 +69,6 @@ echo ""
 # Check for other required tools (installation requires sudo)
 if ! command -v "python3" &> /dev/null || ! command -v "npm" &> /dev/null || ! command -v "ip" &> /dev/null || ! command -v "openssl" &> /dev/null; then
     echo "INFO: Installing other required tools (Python, NPM, IP tools, OpenSSL)..."
-    # Add 'openssl' to the list of packages to install
     sudo apt-get install -y python3-full npm iproute2 openssl
 fi
 echo "✅ All required tools are present."
@@ -86,7 +82,6 @@ echo ""
 
 
 # --- Stage 2: Setting up Python Host Environment ---
-# (This section remains unchanged)
 echo "--- Stage 2: Setting up Python virtual environment for host-side scripts ---"
 REQUIREMENTS_FILE="backend/requirements.txt"
 VENV_DIR="backend/venv"
@@ -138,7 +133,6 @@ if [ -f "package.json" ]; then
     
     echo "INFO: Using Yarn for a more stable installation."
 
-    # --- Pristine Cleanup ---
     # Force a clean slate by removing old files from previous failed attempts.
     echo "INFO: Performing pristine cleanup by removing node_modules and lock files..."
     rm -rf node_modules package-lock.json yarn.lock
@@ -195,7 +189,6 @@ echo "✅ MASTER password received from environment."
 echo "INFO: Creating local secret files..."
 mkdir -p ./.secrets
 
-# The '-n' flag is the CRITICAL FIX. It prevents echo from adding a newline.
 echo -n "$MASTER_PASSWORD" > ./.secrets/postgres_password.secret
 echo -n "$MASTER_PASSWORD" > ./.secrets/elastic_password.secret
 echo "INFO: Generating secure encryption keys for Kibana..."
@@ -211,10 +204,8 @@ echo ""
 
 # --- CRITICAL SECURITY STEP: Ensure secrets are not committed to Git ---
 if [ -f ".gitignore" ]; then
-    # Add the secrets directory to .gitignore if it's not already there
     grep -qxF ".secrets/" .gitignore || echo ".secrets/" >> .gitignore
 else
-    # Create a .gitignore file if it doesn't exist
     echo ".secrets/" > .gitignore
 fi
 echo "INFO: Ensured secret files are ignored by Git."
@@ -240,7 +231,6 @@ update_env_var "POSTGRES_DB" "$DB_NAME"
 update_env_var "DB_HOST" "db"
 update_env_var "DB_PORT" "5432"
 
-# Note: ELASTIC_PASSWORD, POSTGRES_PASSWORD, and DATABASE_URL are now REMOVED from .env
 # The backend application will construct its own DATABASE_URL using secrets.
 
 echo "✅ .env file has been configured with non-sensitive data."
@@ -252,14 +242,12 @@ echo ""
 echo "--- Stage 4.5: Preparing Host & Docker Environment ---"
 echo "INFO: Checking for and disabling any conflicting host services..."
 if command -v systemctl &> /dev/null; then
-    # This will attempt to stop/disable and continue even if it fails (|| true)
     sudo systemctl disable --now suricata || true > /dev/null 2>&1
 fi
 sudo pkill -f suricata || true
 echo "INFO: Host is clean."
 
 echo "INFO: Removing obsolete 'version' tag from docker-compose.yml to prevent warnings..."
-# Use sed -i.bak to be safer, but the original script uses this.
 sed -i '/^version:/d' docker-compose.yml
 
 echo "INFO: Tearing down any previous Docker instances to ensure a clean start..."
