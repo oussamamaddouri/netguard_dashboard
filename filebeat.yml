@@ -9,12 +9,10 @@ filebeat.inputs:
   fields:
     log_source: zeek
   fields_under_root: true
-  # NOTE: The broken 'parsers:' block is removed from here.
   processors:
-    # THIS IS THE CRITICAL FIX: It finds the 'message' field and decodes it as JSON.
     - decode_json_fields:
         fields: ["message"]
-        target: "" # This places the decoded fields (like 'ts', 'id') at the top level.
+        target: "" 
         overwrite_keys: true
 
     - rename:
@@ -38,7 +36,6 @@ filebeat.inputs:
   fields:
     log_source: suricata
   fields_under_root: true
-  # The ndjson parser works fine for Suricata, so we keep it.
   parsers:
     - ndjson:
         keys_under_root: true
